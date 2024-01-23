@@ -3,9 +3,11 @@ package image_manipulator
 import (
 	"bufio"
 	"image"
+	"image/color"
 	"image/draw"
 	"image/jpeg"
 	_ "image/jpeg"
+	_ "image/png"
 	"io"
 	"log"
 	"os"
@@ -68,9 +70,11 @@ func (im *imageManipulator) AddTextToCenterOfImage(r io.Reader, text string, out
 	resultImg := image.NewRGBA(bounds)
 	draw.Draw(resultImg, bounds, srcImg, image.Point{}, draw.Src)
 
+	complimentColor := im.findComplimentColor(srcImg, textBoundingBoxes)
+
 	im.freeTypeContext.SetClip(bounds)
 	im.freeTypeContext.SetDst(resultImg)
-	im.freeTypeContext.SetSrc(image.White)
+	im.freeTypeContext.SetSrc(image.NewUniform(complimentColor))
 
 	for i, txt := range textSeparated {
 		x := im.findStartingXPoint(bounds, textBoundingBoxes[i])
@@ -152,4 +156,63 @@ func (im *imageManipulator) findStartingYPoint(originalBound image.Rectangle, fo
 
 	return start + (currentLineNumber * pxFontHeight) + (currentLineNumber * spacing)
 
+}
+
+func (im *imageManipulator) findComplimentColor(srcImg image.Image, boundingBoxes []image.Rectangle) color.Color {
+	minX := boundingBoxes[0].Min.X
+	minY := boundingBoxes[0].Min.Y
+	maxX := boundingBoxes[0].Max.X
+	maxY := boundingBoxes[0].Max.Y
+
+	for _, b := range boundingBoxes {
+		if b.Min.X < minX {
+			minX = b.Min.X
+		}
+		if b.Min.Y < minY {
+			minY = b.Min.Y
+		}
+
+		if b.Max.X > maxX {
+			maxX = b.Max.X
+		}
+		if b.Max.Y > maxY {
+			maxY = b.Max.Y
+		}
+	}
+
+	impactedArea := image.Rectangle{
+		Min: image.Point{minX, minY},
+		Max: image.Point{maxX, maxY},
+	}
+	// initialize variables to hold total color and total pixels
+	var totalColorR, totalColorG, totalColorB, totalPixels uint32
+
+	// iterate over each pixel in the impacted area
+	for y := impactedArea.Min.Y; y < impactedArea.Max.Y; y++ {
+		for x := impactedArea.Min.X; x < impactedArea.Max.X; x++ {
+			// get the color of the pixel
+			r, g, b, _ := srcImg.At(x, y).RGBA()
+
+			// add the color to the total
+			totalColorR += r
+			totalColorG += g
+			totalColorB += b
+
+			// increment the total pixel count
+			totalPixels++
+		}
+	}
+
+	// calculate the average color
+	averageColorR := totalColorR / totalPixels
+	averageColorG := totalColorG / totalPixels
+	averageColorB := totalColorB / totalPixels
+
+	// calculate the complimentary color
+	complimentaryColorR := uint8(255 - (averageColorR >> 8))
+	complimentaryColorG := uint8(255 - (averageColorG >> 8))
+	complimentaryColorB := uint8(255 - (averageColorB >> 8))
+
+	// return the complimentary color
+	return color.RGBA{complimentaryColorR, complimentaryColorG, complimentaryColorB, 255}
 }
