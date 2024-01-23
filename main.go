@@ -28,7 +28,7 @@ func main() {
 
 	unsplash := unsplash.New(os.Getenv("UNSPLASH_ACCESS_KEY"))
 
-	srcImg, err := unsplash.GetImageOld()
+	srcImg, err := unsplash.GetImage()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
