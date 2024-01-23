@@ -38,7 +38,6 @@ func main() {
 	s := rand.NewSource(time.Now().Unix())
 	r := rand.New(s)
 	text := texts[r.Intn(len(texts))]
-	log.Println(text)
 
 	err = imageManipulator.AddTextToCenterOfImage(srcImg, text, "assets/result.jpg")
 	if err != nil {
