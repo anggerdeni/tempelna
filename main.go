@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/abdullahdiaa/garabic"
 	"github.com/anggerdeni/tempelna/image_manipulator"
 	"github.com/anggerdeni/tempelna/unsplash"
 )
@@ -27,7 +28,7 @@ func main() {
 
 	unsplash := unsplash.New(os.Getenv("UNSPLASH_ACCESS_KEY"))
 
-	srcImg, err := unsplash.GetImage()
+	srcImg, err := unsplash.GetImageOld()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -37,6 +38,7 @@ func main() {
 	s := rand.NewSource(time.Now().Unix())
 	r := rand.New(s)
 	text := texts[r.Intn(len(texts))]
+	log.Println(text)
 
 	err = imageManipulator.AddTextToCenterOfImage(srcImg, text, "assets/result.jpg")
 	if err != nil {
@@ -64,7 +66,7 @@ func getTexts() []string {
 	texts := make([]string, 0)
 
 	for _, src := range srcs {
-		texts = append(texts, fmt.Sprintf("%s\n%s", src.Arabic, src.English))
+		texts = append(texts, fmt.Sprintf("%s\n%s", garabic.Shape(src.Arabic), src.English))
 	}
 	return texts
 }

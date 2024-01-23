@@ -14,6 +14,7 @@ import (
 
 type Unsplash interface {
 	GetImage() (io.Reader, error)
+	GetImageOld() (io.Reader, error)
 }
 
 type unsplash struct {
